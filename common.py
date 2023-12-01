@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from datetime import datetime
 import time
-
+from threading import Timer, Thread, Event
 
 class Common:
 
@@ -101,3 +101,51 @@ class Chart:
         plt.xlabel(params.xlabel) 
         plt.ylabel(params.ylabel) 
         plt.show()
+        
+class X_Timer():
+    def __init__(self, _interval, _onTimer):
+        self.tmr = None
+        self.interval = _interval
+        self.x_onTimer = _onTimer
+
+    def tm_start(self):
+        self.tmr = Timer(self.interval, self.tm_start)
+        self.tmr.start()
+        self.x_onTimer(self.tmr)
+
+    def tm_stop(self):
+        self.tmr.cancel()
+
+    def one_start(self):
+        self.tmr = Timer(self.interval, self.x_onTimer)
+        self.tmr.start()
+        
+class XTimer: 
+    
+    def __init__(self):
+        self.evnt = Event()
+        self.tm = X_Timer()
+
+    def timer_start(self, interval, timer_Callbak):
+        xwait = XTimer(interval, timer_Callbak)
+        xwait.tm_start()
+        return xwait
+    
+    def timer_break(self, xwait):
+        xwait.tm_stop()
+        self.evnt.set()
+        
+    def timer_stop(self, timer):
+        timer.cancel()
+        self.evnt.set()
+        
+    def timer_start_example(self, interval, timer_Callbak):
+        xwait = None
+        try:
+            xwait = self.tm.timer_start(interval, timer_Callbak)
+        except Exception as ins:
+            print('Error waiting: ', ins)
+            self.tm.timer_break(xwait)
+        except KeyboardInterrupt:
+            print("breack waiting")
+            self.tm.timer_break(xwait)        
